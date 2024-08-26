@@ -11,7 +11,9 @@ type CharacterData = {
 const App = () => {
   const [image, setImage] = useState<string | null>(null);
   const [similarCharacter, setSimilarCharacter] = useState<CharacterData | null>(null);
+  const [noMatchFound, setNoMatchFound] = useState<boolean>(false); // 유사한 이미지가 없을 때 표시
   const [modelsLoaded, setModelsLoaded] = useState<boolean>(false); // 모델 로딩 상태
+  const [isComparing, setIsComparing] = useState<boolean>(false); // 비교 중 상태
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [characterData, setCharacterData] = useState<CharacterData[]>([]);
@@ -71,6 +73,7 @@ const App = () => {
     if (webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot();
       setImage(imageSrc);
+      setNoMatchFound(false); // 이전 결과 초기화
     }
   };
 
@@ -81,6 +84,7 @@ const App = () => {
       reader.onload = () => {
         if (reader.result && typeof reader.result === "string") {
           setImage(reader.result);
+          setNoMatchFound(false); // 이전 결과 초기화
         }
       };
       reader.readAsDataURL(file);
@@ -98,7 +102,9 @@ const App = () => {
       return;
     }
 
+    setIsComparing(true); // 비교 시작
     await detectFace(image);
+    setIsComparing(false); // 비교 완료
   };
 
   const detectFace = async (image: string) => {
@@ -124,12 +130,20 @@ const App = () => {
       }
     });
 
+    // 임계값 설정 - 이 값을 넘어가면 "유사한 이미지 없음" 처리
+    const threshold = 0.6;
+    if (minDistance > threshold) {
+      setNoMatchFound(true); // 유사한 이미지가 없는 경우
+      return null;
+    }
+
+    setNoMatchFound(false); // 유사한 이미지가 있는 경우
     return bestMatch;
   };
 
   return (
     <div>
-      <h1>얼굴 인식 및 유사 캐릭터 찾기</h1>
+      <h1>TEST</h1>
 
       {/* 모델이 로드되기 전에는 아래 UI를 숨깁니다 */}
       {modelsLoaded ? (
@@ -142,10 +156,12 @@ const App = () => {
           }}
         >
           <Webcam audio={false} ref={webcamRef} screenshotFormat='image/jpeg' width={320} height={240} />
-          <button onClick={capture}>사진 찍기</button>
+          <button onClick={capture} disabled={isComparing}>
+            사진 찍기
+          </button>
 
           <div style={{ marginTop: "20px" }}>
-            <input type='file' accept='image/*' onChange={handleImageUpload} />
+            <input type='file' accept='image/*' onChange={handleImageUpload} disabled={isComparing} />
           </div>
         </div>
       ) : (
@@ -155,20 +171,26 @@ const App = () => {
       {image && (
         <div>
           <img src={image} alt='Captured' style={{ marginTop: "20px" }} />
-          <button onClick={compareFace} style={{ marginTop: "20px" }}>
-            비교하기
+          <button onClick={compareFace} style={{ marginTop: "20px" }} disabled={isComparing}>
+            {isComparing ? "비교 중..." : "비교하기"}
           </button>
         </div>
       )}
 
       <canvas ref={canvasRef} style={{ display: "none" }} />
 
-      {similarCharacter && (
+      {isComparing && <p style={{ color: "blue" }}>비교 중입니다. 잠시만 기다려주세요...</p>}
+
+      {noMatchFound ? (
+        <div style={{ marginTop: "20px", color: "red" }}>
+          <h2>유사한 이미지가 없습니다.</h2>
+        </div>
+      ) : similarCharacter ? (
         <div style={{ marginTop: "20px" }}>
           <h2>유사한 캐릭터</h2>
           <img src={similarCharacter.path} alt='Character' />
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
