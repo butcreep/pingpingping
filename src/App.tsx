@@ -51,9 +51,13 @@ const App = () => {
     // 모델을 로드하고 임베딩 데이터를 준비
     const loadModels = async () => {
       try {
-        await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
-        await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
-        await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+        const MODEL_URL = process.env.PUBLIC_URL + "/models";
+        await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        // await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
+        // await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
+        // await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
         setModelsLoaded(true); // 모델이 로드되었음을 설정
         await loadCharacterEmbeddings();
       } catch (error) {
