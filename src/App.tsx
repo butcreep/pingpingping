@@ -21,10 +21,10 @@ const App = () => {
   // 캐릭터 이미지에서 임베딩 데이터 추출
   const loadCharacterEmbeddings = async () => {
     const characterImages = [
-      { name: "TiniPing1", path: "/images/tiniping1.jpg" },
-      { name: "TiniPing2", path: "/images/tiniping2.jpg" },
-      { name: "TiniPing3", path: "/images/tiniping3.jpg" },
-      { name: "TiniPing4", path: "/images/tiniping4.jpg" },
+      { name: "TiniPing1", path: process.env.PUBLIC_URL + "/images/tiniping1.jpg" },
+      { name: "TiniPing2", path: process.env.PUBLIC_URL + "/images/tiniping2.jpg" },
+      { name: "TiniPing3", path: process.env.PUBLIC_URL + "/images/tiniping3.jpg" },
+      { name: "TiniPing4", path: process.env.PUBLIC_URL + "/images/tiniping4.jpg" },
     ];
 
     const embeddings = await Promise.all(
