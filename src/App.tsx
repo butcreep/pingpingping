@@ -14,6 +14,7 @@ const App = () => {
   const [noMatchFound, setNoMatchFound] = useState<boolean>(false); // 유사한 이미지가 없을 때 표시
   const [modelsLoaded, setModelsLoaded] = useState<boolean>(false); // 모델 로딩 상태
   const [isComparing, setIsComparing] = useState<boolean>(false); // 비교 중 상태
+  const [webcamActive, setWebcamActive] = useState<boolean>(false); // 웹캠 활성화 상태
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [characterData, setCharacterData] = useState<CharacterData[]>([]);
@@ -55,9 +56,6 @@ const App = () => {
         await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-        // await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
-        // await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
-        // await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
         setModelsLoaded(true); // 모델이 로드되었음을 설정
         await loadCharacterEmbeddings();
       } catch (error) {
@@ -67,6 +65,10 @@ const App = () => {
 
     loadModels();
   }, []);
+
+  const activateWebcam = () => {
+    setWebcamActive(true); // 웹캠 활성화
+  };
 
   const capture = async () => {
     if (!modelsLoaded) {
@@ -159,10 +161,18 @@ const App = () => {
             flexDirection: "column",
           }}
         >
-          <Webcam audio={false} ref={webcamRef} screenshotFormat='image/jpeg' width={320} height={240} />
-          <button onClick={capture} disabled={isComparing}>
-            사진 찍기
-          </button>
+          {!webcamActive ? (
+            <button onClick={activateWebcam} disabled={isComparing}>
+              사진 찍기
+            </button>
+          ) : (
+            <>
+              <Webcam audio={false} ref={webcamRef} screenshotFormat='image/jpeg' width={320} height={240} />
+              <button onClick={capture} disabled={isComparing}>
+                촬영
+              </button>
+            </>
+          )}
 
           <div style={{ marginTop: "20px" }}>
             <input type='file' accept='image/*' onChange={handleImageUpload} disabled={isComparing} />
@@ -174,7 +184,11 @@ const App = () => {
 
       {image && (
         <div>
-          <img src={image} alt='Captured' style={{ marginTop: "20px" }} />
+          <img
+            src={image}
+            alt='Captured'
+            style={{ marginTop: "20px", maxWidth: "100%", height: "auto", display: "block", margin: "0 auto" }}
+          />
           <button onClick={compareFace} style={{ marginTop: "20px" }} disabled={isComparing}>
             {isComparing ? "비교 중..." : "비교하기"}
           </button>
@@ -192,7 +206,7 @@ const App = () => {
       ) : similarCharacter ? (
         <div style={{ marginTop: "20px" }}>
           <h2>유사한 캐릭터</h2>
-          <img src={similarCharacter.path} alt='Character' />
+          <img src={similarCharacter.path} alt='Character' style={{ maxWidth: "100%", height: "auto" }} />
         </div>
       ) : null}
     </div>
