@@ -17,7 +17,13 @@ const App = () => {
   const [webcamActive, setWebcamActive] = useState<boolean>(false); // 웹캠 활성화 상태
   const webcamRef = useRef<Webcam | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // 파일 입력 필드를 참조하는 Ref
   const [characterData, setCharacterData] = useState<CharacterData[]>([]);
+
+  // 후면 카메라를 사용하기 위한 videoConstraints
+  const videoConstraints = {
+    facingMode: "environment", // 후면 카메라 사용 설정
+  };
 
   // 캐릭터 이미지에서 임베딩 데이터 추출
   const loadCharacterEmbeddings = async () => {
@@ -147,6 +153,19 @@ const App = () => {
     return bestMatch;
   };
 
+  // 데이터 초기화 함수 (닫기 버튼 클릭 시 호출)
+  const resetData = () => {
+    setImage(null);
+    setSimilarCharacter(null);
+    setNoMatchFound(false);
+    setIsComparing(false);
+
+    // 파일 입력 필드 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // 파일 입력 값 초기화
+    }
+  };
+
   return (
     <div>
       <h1>TEST</h1>
@@ -167,7 +186,14 @@ const App = () => {
             </button>
           ) : (
             <>
-              <Webcam audio={false} ref={webcamRef} screenshotFormat='image/jpeg' width={320} height={240} />
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat='image/jpeg'
+                width={320}
+                height={240}
+                videoConstraints={videoConstraints} // 후면 카메라 사용
+              />
               <button onClick={capture} disabled={isComparing}>
                 촬영
               </button>
@@ -175,7 +201,13 @@ const App = () => {
           )}
 
           <div style={{ marginTop: "20px" }}>
-            <input type='file' accept='image/*' onChange={handleImageUpload} disabled={isComparing} />
+            <input
+              type='file'
+              accept='image/*'
+              onChange={handleImageUpload}
+              disabled={isComparing}
+              ref={fileInputRef} // input 필드 참조 설정
+            />
           </div>
         </div>
       ) : (
@@ -183,12 +215,27 @@ const App = () => {
       )}
 
       {image && (
-        <div>
+        <div style={{ position: "relative", marginTop: "20px" }}>
           <img
             src={image}
             alt='Captured'
-            style={{ marginTop: "20px", maxWidth: "100%", height: "auto", display: "block", margin: "0 auto" }}
+            style={{ maxWidth: "100%", height: "auto", display: "block", margin: "0 auto" }}
           />
+          <button
+            onClick={resetData}
+            style={{
+              position: "absolute",
+              top: "10px",
+              right: "10px",
+              background: "red",
+              color: "white",
+              border: "none",
+              padding: "5px 10px",
+              cursor: "pointer",
+            }}
+          >
+            닫기
+          </button>
           <button onClick={compareFace} style={{ marginTop: "20px" }} disabled={isComparing}>
             {isComparing ? "비교 중..." : "비교하기"}
           </button>
